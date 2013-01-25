@@ -1,4 +1,28 @@
-#/bin/bash
+#!/bin/bash
+
+while getopts ":ab:" opt;
+do
+	case $opt in
+		a)
+			echo "a"
+			;;
+		
+		b)
+			echo "b"
+			;;
+
+		:)
+			echo "Option -$OPTARG requires an argument."
+			exit 1
+			;;
+
+		\?)
+			echo "Invalid option: -$OPTARG"
+			;;
+	esac
+done
+
+exit
 
 # options
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
