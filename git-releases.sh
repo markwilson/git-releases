@@ -95,7 +95,7 @@ then
 	echo "Checkout failed."
 	exit 8
 fi
-echo "Checked out $TAG"
+echo "Checked out $TAG."
 cd $DIR
 
 echo "Copying $TAG to $TAGS/$TAG..."
