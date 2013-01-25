@@ -1,9 +1,12 @@
 #/bin/bash
 
+# options
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SHARED="$DIR/shared"
-
+TAGS="$DIR/tags"
 REPO="git://github.com/markwilson/git-releases.git"
+CLEANUP=true
+OVERWRITE=true
 
 function create_git_repo {
 	# create a shared branch
@@ -26,10 +29,36 @@ then
 	exit 2
 fi
 
-if [ -d "$DIR/$TAG" ]
+if [ ! -d "$TAGS" ]
 then
-	echo "$DIR/$TAG already exists."
-	exit 3
+	echo "Created tags directory..."
+	mkdir "$TAGS"
+	RETVAL=$?
+	if [ $RETVAL -ne 0 ]
+	then
+		echo "Creating tags directory failed."
+		exit 3
+	fi
+	echo "Tags directory created."
+fi
+
+if [ -d "$TAGS/$TAG" ]
+then
+	echo "Tag $TAG already exists."
+	if [ $OVERWRITE ]
+	then
+		echo "Removing $TAG..."
+		rm -rf "$TAGS/$TAG"
+		RETVAL=$?
+		if [ $RETVAL -ne 0 ]
+		then
+			echo "Removing $TAG failed."
+			exit 4
+		fi
+		echo "Removed $TAG."
+	else
+		exit 5
+	fi
 fi
 
 if [ ! -d "$SHARED" ]
@@ -41,7 +70,7 @@ else
 	then
 		# no git folder
 		echo "$SHARED already exists but is not a repository."
-		exit 4
+		exit 6
 	fi
 	
 	cd $SHARED
@@ -51,7 +80,7 @@ else
 	if [ $RETVAL -ne 0 ]
 	then
 		echo "Repository update failed."
-		exit 5
+		exit 7
 	fi
 	echo "Repository updated."
 	cd $DIR
@@ -64,28 +93,31 @@ RETVAL=$?
 if [ $RETVAL -ne 0 ]
 then
 	echo "Checkout failed."
-	exit 6
+	exit 8
 fi
-echo "$TAG checked out."
+echo "Checked out $TAG"
 cd $DIR
 
-echo "Copying $TAG to $DIR/$TAG..."
-cp -rf $SHARED $DIR/$TAG
+echo "Copying $TAG to $TAGS/$TAG..."
+cp -rf $SHARED $TAGS/$TAG
 RETVAL=$?
 if [ $RETVAL -ne 0 ]
 then
 	echo "Copy failed."
-	exit 7
+	exit 9
 fi
 echo "Copy complete."
 
-echo "Cleaning up..."
-rm -rf $DIR/$TAG/.git
-if [ $RETVAL -ne 0 ]
+if [ $CLEANUP ]
 then
-	echo "Clean up failed."
-	exit 8
+	echo "Cleaning up..."
+	rm -rf $TAGS/$TAG/.git
+	if [ $RETVAL -ne 0 ]
+	then
+		echo "Clean up failed."
+		exit 8
+	fi
+	echo "Clean up complete."
 fi
-echo "Clean up complete."
 
 echo "Complete."
