@@ -10,22 +10,8 @@ declare -r RELEASES
 SHARED="$DIR/shared"
 TAGS="$DIR/tags"
 REPO="git://github.com/markwilson/git-releases.git"
-CLEANUP=false
-OVERWRITE=false
-
-if [ $# -le 1 ]
-then
-    # no arguments supplied
-    if [ ! -e "$RELEASES" ]
-    then
-        echo "Usage: $0 [-s SHARED] [-t TAGS] [-r REPO] [-c] [-o]"
-        exit 1
-    fi
-
-    echo "Loading configuration..."
-    source "$RELEASES"
-    echo "Loaded configuration."
-fi
+CLEANUP=0
+OVERWRITE=0
 
 while getopts "s:t:r:co" opt
 do
@@ -43,18 +29,33 @@ do
             ;;
 
         c)
-            CLEANUP=true
+            CLEANUP=1
             ;;
 
         o)
-            OVERWRITE=true
+            OVERWRITE=1
             ;;
 
         \?)
             echo "Invalid option: -$OPTARG"
+            exit 1
             ;;
     esac
 done
+
+# clear the options
+shift $((OPTIND-1))
+
+# no options supplied, show usage message
+if [ $# -eq 0 ]
+then
+    # no arguments supplied
+    if [ ! -e "$RELEASES" ]
+    then
+        echo "Usage: $0 [-r REPO] [-c] [-o] [-s SHARED] [-t TAGS] <tag|branch>"
+        exit 1
+    fi
+fi
 
 if [ ! -e "$RELEASES" ]
 then
@@ -64,7 +65,12 @@ then
     echo "REPO=$REPO" >> $RELEASES
     echo "CLEANUP=$CLEANUP" >> $RELEASES
     echo "OVERWRITE=$OVERWRITE" >> $RELEASES
+
     echo "Generated releases file."
+else
+    echo "Loading configuration..."
+    source "$RELEASES"
+    echo "Loaded configuration."
 fi
 
 function create_git_repo {
@@ -104,7 +110,7 @@ fi
 if [ -d "$TAGS/$TAG" ]
 then
     echo "Tag $TAG already exists."
-    if [ $OVERWRITE ]
+    if [ $OVERWRITE -eq 1 ]
     then
         echo "Removing $TAG..."
         rm -rf "$TAGS/$TAG"
