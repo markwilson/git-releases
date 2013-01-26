@@ -13,9 +13,28 @@ REPO="git://github.com/markwilson/git-releases.git"
 CLEANUP=0
 OVERWRITE=0
 
+function display_help {
+    USAGE="$(basename "$0") [-h] [-r REPO] [-c] [-o] [-s SHARED] [-t TAGS] <tag|branch> -- script to aid snapshots of remote git repositories
+
+Where:
+    -h  show this help text
+    -r  set the remote repository
+    -c  removes .git folder from new snapshot
+    -o  overwrite existing release if found
+    -s  override the shared folder path
+    -t  override the tags folder path"
+
+    echo "$USAGE"
+    exit 1
+}
+
 while getopts "s:t:r:co" opt
 do
     case $opt in
+        h)
+            display_help
+            ;;
+
         s)
             SHARED_PATH=$OPTARG
             ;;
@@ -52,19 +71,14 @@ shift $((OPTIND-1))
 # no options supplied, show usage message
 if [ $# -eq 0 ]
 then
-    # no arguments supplied
-    if [ ! -e "$RELEASES" ]
-    then
-        echo "Usage: $0 [-r REPO] [-c] [-o] [-s SHARED] [-t TAGS] <tag|branch>"
-        exit 1
-    fi
+    display_help
 fi
 
 if [ ! -e "$RELEASES" ]
 then
     echo "Generating releases file..."
-    echo "SHARED=$SHARED" >> $RELEASES
-    echo "TAGS=$TAGS" >> $RELEASES
+    echo "SHARED=$SHARED_PATH" >> $RELEASES
+    echo "TAGS=$TAGS_PATH" >> $RELEASES
     echo "REPO=$REPO" >> $RELEASES
     echo "CLEANUP=$CLEANUP" >> $RELEASES
     echo "OVERWRITE=$OVERWRITE" >> $RELEASES
@@ -93,7 +107,7 @@ TAG=$1
 
 if [ -z $TAG ]
 then
-    echo "Usage: $BASH_SOURCE[0] <tag|branch>"
+    display_help
     exit 2
 fi
 
@@ -137,7 +151,7 @@ else
     if [ ! -d "$SHARED/.git" ]
     then
         # no git folder
-        echo "$SHARED already exists but is not a repository."
+        echo "$SHARED_PATH already exists but is not a repository."
         exit 6
     fi
     
