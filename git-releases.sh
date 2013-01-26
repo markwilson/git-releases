@@ -7,8 +7,8 @@ RELEASES=$DIR/.releases
 declare -r RELEASES
 
 # options
-SHARED="$DIR/shared"
-TAGS="$DIR/tags"
+SHARED_PATH="shared"
+TAGS_PATH="tags"
 REPO="git://github.com/markwilson/git-releases.git"
 CLEANUP=0
 OVERWRITE=0
@@ -17,11 +17,11 @@ while getopts "s:t:r:co" opt
 do
     case $opt in
         s)
-            SHARED=$DIR/$OPTARG
+            SHARED_PATH=$OPTARG
             ;;
 
         t)
-            TAGS=$DIR/$OPTARG
+            TAGS_PATH=$OPTARG
             ;;
 
         r)
@@ -42,6 +42,9 @@ do
             ;;
     esac
 done
+
+SHARED=$DIR/$SHARED_PATH
+TAGS=$DIR/$TAGS_PATH
 
 # clear the options
 shift $((OPTIND-1))
