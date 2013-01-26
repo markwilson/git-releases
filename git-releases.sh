@@ -1,113 +1,148 @@
 #!/bin/bash
 
-while getopts ":ab:" opt;
-do
-	case $opt in
-		a)
-			echo "a"
-			;;
-		
-		b)
-			echo "b"
-			;;
-
-		:)
-			echo "Option -$OPTARG requires an argument."
-			exit 1
-			;;
-
-		\?)
-			echo "Invalid option: -$OPTARG"
-			;;
-	esac
-done
-
-exit
+# constants
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+declare -r DIR
+RELEASES=$DIR/.releases
+declare -r RELEASES
 
 # options
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SHARED="$DIR/shared"
 TAGS="$DIR/tags"
 REPO="git://github.com/markwilson/git-releases.git"
-CLEANUP=true
-OVERWRITE=true
+CLEANUP=false
+OVERWRITE=false
+
+if [ $# -le 1 ]
+then
+    # no arguments supplied
+    if [ ! -e "$RELEASES" ]
+    then
+        echo "Usage: $0 [-s SHARED] [-t TAGS] [-r REPO] [-c] [-o]"
+        exit 1
+    fi
+
+    echo "Loading configuration..."
+    source "$RELEASES"
+    echo "Loaded configuration."
+fi
+
+while getopts "s:t:r:co" opt
+do
+    case $opt in
+        s)
+            SHARED=$DIR/$OPTARG
+            ;;
+
+        t)
+            TAGS=$DIR/$OPTARG
+            ;;
+
+        r)
+            REPO=$OPTARG
+            ;;
+
+        c)
+            CLEANUP=true
+            ;;
+
+        o)
+            OVERWRITE=true
+            ;;
+
+        \?)
+            echo "Invalid option: -$OPTARG"
+            ;;
+    esac
+done
+
+if [ ! -e "$RELEASES" ]
+then
+    echo "Generating releases file..."
+    echo "SHARED=$SHARED" >> $RELEASES
+    echo "TAGS=$TAGS" >> $RELEASES
+    echo "REPO=$REPO" >> $RELEASES
+    echo "CLEANUP=$CLEANUP" >> $RELEASES
+    echo "OVERWRITE=$OVERWRITE" >> $RELEASES
+    echo "Generated releases file."
+fi
 
 function create_git_repo {
-	# create a shared branch
-	echo "Creating shared repository..."
-	git clone $REPO $SHARED > /dev/null 2>&1
-	RETVAL=$?
-	if [ $RETVAL -ne 0 ]
-	then
-		echo "Shared repository creation failed."
-		exit 1
-	fi
-	echo "Shared repository created."
+    # create a shared branch
+    echo "Creating shared repository..."
+    git clone $REPO $SHARED > /dev/null 2>&1
+    RETVAL=$?
+    if [ $RETVAL -ne 0 ]
+    then
+        echo "Shared repository creation failed."
+        exit 1
+    fi
+    echo "Shared repository created."
 }
 
 TAG=$1
 
 if [ -z $TAG ]
 then
-	echo "Usage: $BASH_SOURCE[0] <tag|branch>"
-	exit 2
+    echo "Usage: $BASH_SOURCE[0] <tag|branch>"
+    exit 2
 fi
 
 if [ ! -d "$TAGS" ]
 then
-	echo "Created tags directory..."
-	mkdir "$TAGS"
-	RETVAL=$?
-	if [ $RETVAL -ne 0 ]
-	then
-		echo "Creating tags directory failed."
-		exit 3
-	fi
-	echo "Tags directory created."
+    echo "Created tags directory..."
+    mkdir "$TAGS"
+    RETVAL=$?
+    if [ $RETVAL -ne 0 ]
+    then
+        echo "Creating tags directory failed."
+        exit 3
+    fi
+    echo "Tags directory created."
 fi
 
 if [ -d "$TAGS/$TAG" ]
 then
-	echo "Tag $TAG already exists."
-	if [ $OVERWRITE ]
-	then
-		echo "Removing $TAG..."
-		rm -rf "$TAGS/$TAG"
-		RETVAL=$?
-		if [ $RETVAL -ne 0 ]
-		then
-			echo "Removing $TAG failed."
-			exit 4
-		fi
-		echo "Removed $TAG."
-	else
-		exit 5
-	fi
+    echo "Tag $TAG already exists."
+    if [ $OVERWRITE ]
+    then
+        echo "Removing $TAG..."
+        rm -rf "$TAGS/$TAG"
+        RETVAL=$?
+        if [ $RETVAL -ne 0 ]
+        then
+            echo "Removing $TAG failed."
+            exit 4
+        fi
+        echo "Removed $TAG."
+    else
+        exit 5
+    fi
 fi
 
 if [ ! -d "$SHARED" ]
 then
-	# no shared git directory
-	create_git_repo
+    # no shared git directory
+    create_git_repo
 else
-	if [ ! -d "$SHARED/.git" ]
-	then
-		# no git folder
-		echo "$SHARED already exists but is not a repository."
-		exit 6
-	fi
-	
-	cd $SHARED
-	echo "Updating repository..."
-	git fetch -a > /dev/null 2>&1
-	RETVAL=$?
-	if [ $RETVAL -ne 0 ]
-	then
-		echo "Repository update failed."
-		exit 7
-	fi
-	echo "Repository updated."
-	cd $DIR
+    if [ ! -d "$SHARED/.git" ]
+    then
+        # no git folder
+        echo "$SHARED already exists but is not a repository."
+        exit 6
+    fi
+    
+    cd $SHARED
+    echo "Updating repository..."
+    git fetch -a > /dev/null 2>&1
+    RETVAL=$?
+    if [ $RETVAL -ne 0 ]
+    then
+        echo "Repository update failed."
+        exit 7
+    fi
+    echo "Repository updated."
+    cd $DIR
 fi
 
 cd $SHARED
@@ -116,8 +151,8 @@ git checkout $TAG > /dev/null 2>&1
 RETVAL=$?
 if [ $RETVAL -ne 0 ]
 then
-	echo "Checkout failed."
-	exit 8
+    echo "Checkout failed."
+    exit 8
 fi
 echo "Checked out $TAG"
 cd $DIR
@@ -127,21 +162,21 @@ cp -rf $SHARED $TAGS/$TAG
 RETVAL=$?
 if [ $RETVAL -ne 0 ]
 then
-	echo "Copy failed."
-	exit 9
+    echo "Copy failed."
+    exit 9
 fi
 echo "Copy complete."
 
 if [ $CLEANUP ]
 then
-	echo "Cleaning up..."
-	rm -rf $TAGS/$TAG/.git
-	if [ $RETVAL -ne 0 ]
-	then
-		echo "Clean up failed."
-		exit 8
-	fi
-	echo "Clean up complete."
+    echo "Cleaning up..."
+    rm -rf $TAGS/$TAG/.git
+    if [ $RETVAL -ne 0 ]
+    then
+        echo "Clean up failed."
+        exit 8
+    fi
+    echo "Clean up complete."
 fi
 
 echo "Complete."
