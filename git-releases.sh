@@ -13,6 +13,8 @@ REPO="git://github.com/markwilson/git-releases.git"
 CLEANUP=0
 OVERWRITE=0
 
+POST_RELEASE=post-release.sh
+
 function display_help {
     USAGE="$(basename "$0") [-h] [-r REPO] [-c] [-o] [-s SHARED] [-t TAGS] <tag|branch> -- script to aid snapshots of remote git repositories
 
@@ -200,6 +202,12 @@ then
         exit 8
     fi
     echo "Clean up complete."
+fi
+
+# post update tasks
+if [ -e "$DIR/$POST_RELEASE" ]
+then
+	$DIR/$POST_RELEASE $TAG
 fi
 
 echo "Complete."
