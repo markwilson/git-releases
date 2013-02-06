@@ -18,3 +18,4 @@ To-do list
 -
 * Provide checkout accessor methods such as list tags/branches
 * Check if the current shared repo origin matches the config
+* Create option for pre/post-install scripts, e.g. make && make install
