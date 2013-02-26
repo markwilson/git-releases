@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # constants
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DIR=`pwd`
 declare -r DIR
 RELEASES=$DIR/.releases
 declare -r RELEASES
