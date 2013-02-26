@@ -108,7 +108,7 @@ then
 fi
 echo "Copy complete."
 
-if [ $CLEANUP ]
+if [ $CLEANUP -eq 1 ]
 then
 	echo "Cleaning up..."
 	rm -rf $TAGS/$TAG/.git
