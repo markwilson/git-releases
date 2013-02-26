@@ -118,7 +118,6 @@ then
         echo "Fetching latest tags failed."
         exit 1
     fi
-    cd $DIR
 
     echo "Tags:-"
     git tag | sort --version-sort
