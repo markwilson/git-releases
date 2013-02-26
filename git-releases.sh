@@ -71,7 +71,7 @@ TAGS=$DIR/$TAGS_PATH
 shift $((OPTIND-1))
 
 # no options supplied, show usage message
-if [ $# -eq 0 ]
+if [[ $# -eq 0 && ! -e "$RELEASES" ]]
 then
     display_help
 fi
@@ -109,8 +109,18 @@ TAG=$1
 
 if [ -z $TAG ]
 then
-    display_help
-    exit 2
+    echo "Fetching latest tags..."
+    git fetch --tags > /dev/null 2>&1
+    RETVAL=$?
+    if [ $RETVAL -ne 0 ]
+    then
+        echo "Fetching latest tags failed."
+        exit 1
+    fi
+
+    echo "Tags:-"
+    git tag | sort --version-sort
+    exit 0
 fi
 
 if [ ! -d "$TAGS" ]
