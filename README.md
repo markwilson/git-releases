@@ -20,3 +20,4 @@ To-do list
 * Check if the current shared repo origin matches the config
 * Create option for pre/post-install scripts, e.g. make && make install
 * Add an option to create a "current" symlink to most recent tag
+* Update .releases file creation to skip clone if no tag/branch provided
