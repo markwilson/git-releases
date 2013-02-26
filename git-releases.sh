@@ -110,6 +110,7 @@ TAG=$1
 if [ -z $TAG ]
 then
     echo "Fetching latest tags..."
+    cd $SHARED
     git fetch --tags > /dev/null 2>&1
     RETVAL=$?
     if [ $RETVAL -ne 0 ]
@@ -117,6 +118,7 @@ then
         echo "Fetching latest tags failed."
         exit 1
     fi
+    cd $DIR
 
     echo "Tags:-"
     git tag | sort --version-sort
